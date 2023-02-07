@@ -4,16 +4,14 @@ import (
 	"fmt"
 	"image"
 	"log"
-	"math/rand"
 	"strconv"
 	"strings"
 
 	"github.com/scloudrun/webrtc-remote-screen-arm/internal/encoders"
 	"github.com/scloudrun/webrtc-remote-screen-arm/internal/rdisplay"
 
-	"github.com/google/uuid"
 	"github.com/pion/sdp"
-	"github.com/pion/webrtc/v2"
+	"github.com/pion/webrtc/v3"
 )
 
 // RemoteScreenPeerConn is a webrtc.PeerConnection wrapper that implements the
@@ -21,15 +19,15 @@ import (
 type RemoteScreenPeerConn struct {
 	connection *webrtc.PeerConnection
 	stunServer string
-	track      *webrtc.Track
+	track      *webrtc.TrackLocalStaticSample
 	streamer   videoStreamer
 	grabber    rdisplay.ScreenGrabber
 	encService encoders.Service
 }
 
-func findBestCodec(sdp *sdp.SessionDescription, encService encoders.Service, h264Profile string) (*webrtc.RTPCodec, encoders.VideoCodec, error) {
-	var h264Codec *webrtc.RTPCodec
-	var vp8Codec *webrtc.RTPCodec
+func findBestCodec(sdp *sdp.SessionDescription, encService encoders.Service, h264Profile string) (*webrtc.RTPCodecParameters, encoders.VideoCodec, error) {
+	var h264Codec *webrtc.RTPCodecParameters
+	var vp8Codec *webrtc.RTPCodecParameters
 	for _, md := range sdp.MediaDescriptions {
 		for _, format := range md.MediaName.Formats {
 			intPt, err := strconv.Atoi(format)
@@ -39,15 +37,19 @@ func findBestCodec(sdp *sdp.SessionDescription, encService encoders.Service, h26
 				return nil, encoders.NoCodec, fmt.Errorf("Can't find codec for %d", payloadType)
 			}
 
-			if sdpCodec.Name == webrtc.H264 && h264Codec == nil {
+			if sdpCodec.Name == "H264" && h264Codec == nil {
 				packetSupport := strings.Contains(sdpCodec.Fmtp, "packetization-mode=1")
 				supportsProfile := strings.Contains(sdpCodec.Fmtp, fmt.Sprintf("profile-level-id=%s", h264Profile))
 				if packetSupport && supportsProfile {
-					h264Codec = webrtc.NewRTPH264Codec(payloadType, sdpCodec.ClockRate)
+					h264Codec = &webrtc.RTPCodecParameters{
+						PayloadType: webrtc.PayloadType(payloadType),
+						RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeH264, ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: nil}}
 					h264Codec.SDPFmtpLine = sdpCodec.Fmtp
 				}
-			} else if sdpCodec.Name == webrtc.VP8 && vp8Codec == nil {
-				vp8Codec = webrtc.NewRTPVP8Codec(payloadType, sdpCodec.ClockRate)
+			} else if sdpCodec.Name == "VP8" && vp8Codec == nil {
+				vp8Codec = &webrtc.RTPCodecParameters{
+					PayloadType: webrtc.PayloadType(payloadType),
+					RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeVP8, ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: nil}}
 				vp8Codec.SDPFmtpLine = sdpCodec.Fmtp
 			}
 		}
@@ -100,9 +102,9 @@ func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 		return "", err
 	}
 	mediaEngine := webrtc.MediaEngine{}
-	mediaEngine.RegisterCodec(webrtcCodec)
+	mediaEngine.RegisterCodec(*webrtcCodec, webrtc.RTPCodecTypeVideo)
 
-	api := webrtc.NewAPI(webrtc.WithMediaEngine(mediaEngine))
+	api := webrtc.NewAPI(webrtc.WithMediaEngine(&mediaEngine))
 
 	pcconf := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
@@ -130,21 +132,20 @@ func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 		log.Printf("Connection state: %s \n", connState.String())
 	})
 
-	track, _ := peerConn.NewTrack(
-		webrtcCodec.PayloadType,
-		uint32(rand.Int31()),
-		uuid.New().String(),
-		"remote-screen",
-	)
+	// Create a video track
+	videoTrack, err := webrtc.NewTrackLocalStaticSample(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeH264}, "video", "pion")
+	if err != nil {
+		panic(err)
+	}
 
-	log.Printf("Using codec %s (%d) %s", webrtcCodec.Name, webrtcCodec.PayloadType, webrtcCodec.SDPFmtpLine)
+	log.Printf("Using codec %s (%d) %s", webrtcCodec.MimeType, webrtcCodec.PayloadType, webrtcCodec.SDPFmtpLine)
 
 	direction := getTrackDirection(&sdp)
 
 	if direction == webrtc.RTPTransceiverDirectionSendrecv {
-		_, err = peerConn.AddTrack(track)
+		_, err = peerConn.AddTrack(videoTrack)
 	} else if direction == webrtc.RTPTransceiverDirectionRecvonly {
-		_, err = peerConn.AddTransceiverFromTrack(track, webrtc.RtpTransceiverInit{
+		_, err = peerConn.AddTransceiverFromTrack(videoTrack, webrtc.RtpTransceiverInit{
 			Direction: webrtc.RTPTransceiverDirectionSendonly,
 		})
 	} else {
@@ -160,7 +161,7 @@ func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 		return "", err
 	}
 
-	p.track = track
+	p.track = videoTrack
 
 	answer, err := peerConn.CreateAnswer(nil)
 	if err != nil {

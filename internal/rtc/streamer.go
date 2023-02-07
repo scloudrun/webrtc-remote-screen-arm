@@ -11,8 +11,8 @@ import (
 	"github.com/scloudrun/webrtc-remote-screen-arm/internal/rdisplay"
 
 	"github.com/nfnt/resize"
-	"github.com/pion/webrtc/v2"
-	"github.com/pion/webrtc/v2/pkg/media"
+	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v3/pkg/media"
 )
 
 var fileNumber = 1
@@ -22,14 +22,14 @@ func resizeImage(src *image.RGBA, target image.Point) *image.RGBA {
 }
 
 type rtcStreamer struct {
-	track   *webrtc.Track
+	track   *webrtc.TrackLocalStaticSample
 	stop    chan struct{}
 	screen  *rdisplay.ScreenGrabber
 	encoder *encoders.Encoder
 	size    image.Point
 }
 
-func newRTCStreamer(track *webrtc.Track, screen *rdisplay.ScreenGrabber, encoder *encoders.Encoder, size image.Point) videoStreamer {
+func newRTCStreamer(track *webrtc.TrackLocalStaticSample, screen *rdisplay.ScreenGrabber, encoder *encoders.Encoder, size image.Point) videoStreamer {
 	return &rtcStreamer{
 		track:   track,
 		stop:    make(chan struct{}),
@@ -76,7 +76,7 @@ func (s *rtcStreamer) stream(frame *image.RGBA) error {
 	}
 	return s.track.WriteSample(media.Sample{
 		Data:    payload,
-		Samples: 1,
+		Duration: time.Second,
 	})
 }
 
