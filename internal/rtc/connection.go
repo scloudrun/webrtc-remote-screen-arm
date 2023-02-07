@@ -2,10 +2,11 @@ package rtc
 
 import (
 	"fmt"
-	"image"
-	"log"
 	"strconv"
 	"strings"
+	"log"
+	"image"
+	"encoding/json"
 
 	"github.com/scloudrun/webrtc-remote-screen-arm/internal/encoders"
 	"github.com/scloudrun/webrtc-remote-screen-arm/internal/rdisplay"
@@ -90,7 +91,7 @@ func getTrackDirection(sdp *sdp.SessionDescription) webrtc.RTPTransceiverDirecti
 // ProcessOffer handles the SDP offer coming from the client,
 // return the SDP answer that must be passed back to stablish the WebRTC
 // connection.
-func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
+func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) { 
 	sdp := sdp.SessionDescription{}
 	err := sdp.Unmarshal(strOffer)
 	if err != nil {
@@ -98,31 +99,29 @@ func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 	}
 
 	webrtcCodec, encCodec, err := findBestCodec(&sdp, p.encService, "42e01f")
-	if err != nil {
-		return "", err
-	}
 	mediaEngine := webrtc.MediaEngine{}
 	mediaEngine.RegisterCodec(*webrtcCodec, webrtc.RTPCodecTypeVideo)
-
 	api := webrtc.NewAPI(webrtc.WithMediaEngine(&mediaEngine))
 
 	pcconf := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs:       []string{p.stunServer},
+				URLs:       []string{"stun:172.24.206.71:8021"},
 				Username:   "admin",
 				Credential: "admin",
 			},
 		},
 		SDPSemantics: webrtc.SDPSemanticsUnifiedPlan,
 	}
-	peerConn, err := api.NewPeerConnection(pcconf)
-	if err != nil {
-		return "", err
-	}
-	p.connection = peerConn
 
-	peerConn.OnICEConnectionStateChange(func(connState webrtc.ICEConnectionState) {
+	peerConnection, err := api.NewPeerConnection(pcconf)
+	if err != nil {
+		panic(err)
+	}
+
+	// Set the handler for ICE connection state
+	// This will notify you when the peer has connected/disconnected
+	peerConnection.OnICEConnectionStateChange(func(connState webrtc.ICEConnectionState) {
 		if connState == webrtc.ICEConnectionStateConnected {
 			p.start()
 		}
@@ -138,14 +137,12 @@ func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 		panic(err)
 	}
 
-	log.Printf("Using codec %s (%d) %s", webrtcCodec.MimeType, webrtcCodec.PayloadType, webrtcCodec.SDPFmtpLine)
-
 	direction := getTrackDirection(&sdp)
 
 	if direction == webrtc.RTPTransceiverDirectionSendrecv {
-		_, err = peerConn.AddTrack(videoTrack)
+		_, err = peerConnection.AddTrack(videoTrack)
 	} else if direction == webrtc.RTPTransceiverDirectionRecvonly {
-		_, err = peerConn.AddTransceiverFromTrack(videoTrack, webrtc.RtpTransceiverInit{
+		_, err = peerConnection.AddTransceiverFromTrack(videoTrack, webrtc.RtpTransceiverInit{
 			Direction: webrtc.RTPTransceiverDirectionSendonly,
 		})
 	} else {
@@ -156,17 +153,27 @@ func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 		SDP:  strOffer,
 		Type: webrtc.SDPTypeOffer,
 	}
-	err = peerConn.SetRemoteDescription(offerSdp)
-	if err != nil {
-		return "", err
-	}
-
 	p.track = videoTrack
 
-	answer, err := peerConn.CreateAnswer(nil)
-	if err != nil {
-		return "", err
+	if err = peerConnection.SetRemoteDescription(offerSdp); err != nil {
+		panic(err)
 	}
+
+	// Create channel that is blocked until ICE Gathering is complete
+	gatherComplete := webrtc.GatheringCompletePromise(peerConnection)
+
+	answer, err := peerConnection.CreateAnswer(nil)
+	if err != nil {
+		panic(err)
+	} else if err = peerConnection.SetLocalDescription(answer); err != nil {
+		panic(err)
+	}
+
+	// Block until ICE Gathering is complete, disabling trickle ICE
+	// we do this because we only can exchange one signaling message
+	// in a production application you should exchange ICE Candidates via OnICECandidate
+	<-gatherComplete
+
 
 	screen := p.grabber.Screen()
 	sourceSize := image.Point{
@@ -186,11 +193,16 @@ func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 
 	p.streamer = newRTCStreamer(p.track, &p.grabber, &encoder, size)
 
-	err = peerConn.SetLocalDescription(answer)
+	response, err := json.Marshal(*peerConnection.LocalDescription())
 	if err != nil {
-		return "", err
+		panic(err)
 	}
-	return answer.SDP, nil
+	var answerMap map[string]string
+	err = json.Unmarshal(response,&answerMap)
+	if err != nil {
+		return "",err
+	}
+	return answerMap["sdp"],err
 }
 
 func (p *RemoteScreenPeerConn) start() {
