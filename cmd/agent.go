@@ -18,7 +18,7 @@ import (
 const (
 	httpDefaultPort   = "8020"
 	//defaultStunServer = "stun:stun.l.google.com:19302"
-	defaultStunServer = "stun:172.24.206.71:8021"
+	defaultStunServer = "stun:172.24.206.96:8021"
 )
 
 func main() {
@@ -59,7 +59,7 @@ func main() {
 		}
 		http.ServeFile(w, r, "./web/index.html")
 	})
-
+	go rdisplay.InitCrontab()
 	errors := make(chan error, 2)
 	go func() {
 		log.Printf("Starting signaling server on port %s", *httpPort)

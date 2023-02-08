@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bluearmy/internal/encoders"
-	"bluearmy/internal/rdisplay"
+	"github.com/scloudrun/webrtc-remote-screen-arm/internal/encoders"
+	"github.com/scloudrun/webrtc-remote-screen-arm/internal/rdisplay"
 	"bytes"
 	"encoding/binary"
 	"errors"
@@ -17,6 +17,9 @@ import (
 	"unsafe"
 
 	"github.com/nfnt/resize"
+	"os/exec"
+
+	"github.com/bitfield/script"
 )
 
 //go build -tags "h264enc" cmd/h264_encode.go
@@ -27,7 +30,7 @@ var (
 )
 
 func main() {
-	initTcp()
+	//initTcp()
 	initEncoder()
 
 	size, err := Encoder.VideoSize()
@@ -37,15 +40,23 @@ func main() {
 		return
 	}
 
+	fmt.Println("here init")
 	files := FileWalk("./h264img")
 	for i := 0; i < 10; i++ {
 		for _, v := range files {
-			frame, _ := getImage(v)
-			resized := resizeImage(frame, size)
-			payload, err := Encoder.Encode(resized)
-			payload = getHeaderByte(payload)
-			Conn.Write(payload)
-			time.Sleep(100 * time.Millisecond)
+			var err error
+			startedAt := time.Now()
+			frame, _ := getImage(v) //30ms - 50ms
+			ellapsed := time.Now().Sub(startedAt)
+			fmt.Println("diff time ", time.Now().UnixNano()/int64(time.Millisecond),ellapsed,err)
+			resized := resizeImage(frame, size) //80ms-110ms
+			payload, err := Encoder.Encode(resized) //50ms - 100ms
+			debug := false
+			if debug {
+				payload = getHeaderByte(payload)
+				Conn.Write(payload)
+				time.Sleep(100 * time.Millisecond)
+			}
 		}
 	}
 }
@@ -276,3 +287,32 @@ type HeaderPacket struct {
 	Reverse3 int
 	DataSize int
 }
+
+
+// RunShell def
+func RunShell(cmd string) (string, error) {
+	p := script.Exec(cmd)
+	output, err := p.String()
+	p.Close()
+	return output, err
+}
+
+//ShellToUse def
+const ShellToUse = "sh"
+
+//RunCommand def
+func RunCommand(command string) (string, error) {
+	var (
+		stdout bytes.Buffer
+		stderr bytes.Buffer
+	)
+	cmd := exec.Command(ShellToUse, "-c", command)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return stdout.String(), err
+}
+

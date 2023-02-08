@@ -59,7 +59,7 @@ function startRemoteSession(screen, remoteVideoNode, stream) {
 
   return Promise.resolve().then(() => {
     pc = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:172.24.206.71:8021',"username":"admin","credential":"admin" }]
+      iceServers: [{ urls: 'stun:172.24.206.96:8021',"username":"admin","credential":"admin" }]
     });
     pc.ontrack = (evt) => {
       console.info('ontrack triggered');

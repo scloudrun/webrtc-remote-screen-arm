@@ -106,7 +106,7 @@ func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 	pcconf := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs:       []string{"stun:172.24.206.71:8021"},
+				URLs:       []string{p.stunServer},
 				Username:   "admin",
 				Credential: "admin",
 			},

@@ -62,6 +62,7 @@ func (g *XScreenGrabber) Start() {
 	delta := time.Duration(1000/g.fps) * time.Millisecond
 	var lastImg *image.RGBA
 	files := FileWalk("./h264img")
+	_ = files
 	i:= 0
 	go func() {
 		for {
@@ -79,20 +80,27 @@ func (g *XScreenGrabber) Start() {
 				time.Sleep(time.Second * 1)
 				return
 			default:
+				files := FileWalk("./h264mini")
 				if i == 200 {
 					i =0
 				}
-				img, err := getImage(files[i])
+				if len(files) <= 0 {
+					return
+				}
+				img, err := getImage(files[len(files)-2])
+				fmt.Println(len(files),files[len(files)-2])
 				if err == nil {
 					lastImg = img
 				}
 				if err != nil {
 					if lastImg == nil {
-						return
+						fmt.Println("here empty")
 					}
 					img = lastImg
 				}
-				g.frames <- img
+				if img !=nil {
+					g.frames <- img
+				}
 				i++
 				ellapsed := time.Now().Sub(startedAt)
 				sleepDuration := delta - ellapsed

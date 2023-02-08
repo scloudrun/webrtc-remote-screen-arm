@@ -3,6 +3,7 @@ module github.com/scloudrun/webrtc-remote-screen-arm
 go 1.19
 
 require (
+	github.com/bitfield/script v0.21.4
 	github.com/gen2brain/x264-go v0.2.1
 	github.com/google/uuid v1.3.0
 	github.com/kbinani/screenshot v0.0.0-20210720154843-7d3a670d8329
@@ -12,9 +13,12 @@ require (
 )
 
 require (
+	bitbucket.org/creachadair/shell v0.0.7 // indirect
 	github.com/gen2brain/shm v0.0.0-20200228170931-49f9650110c5 // indirect
 	github.com/gen2brain/x264-go/x264c v0.0.0-20220828141959-ddbf4cbb9814 // indirect
 	github.com/gen2brain/x264-go/yuv v0.0.0-20220622130850-9f6285ee8073 // indirect
+	github.com/itchyny/gojq v0.12.7 // indirect
+	github.com/itchyny/timefmt-go v0.1.3 // indirect
 	github.com/jezek/xgb v0.0.0-20210312150743-0e0f116e1240 // indirect
 	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
 	github.com/pion/datachannel v1.5.5 // indirect
