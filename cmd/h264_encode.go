@@ -48,9 +48,11 @@ func main() {
 			startedAt := time.Now()
 			frame, _ := getImage(v) //30ms - 50ms
 			ellapsed := time.Now().Sub(startedAt)
-			fmt.Println("diff time ", time.Now().UnixNano()/int64(time.Millisecond),ellapsed,err)
 			resized := resizeImage(frame, size) //80ms-110ms
+			ellapsedResize := time.Now().Sub(startedAt)
 			payload, err := Encoder.Encode(resized) //50ms - 100ms
+			ellapsedEncode := time.Now().Sub(startedAt)
+			fmt.Printf("diff time[%v] getImage[%v] resized[%v] encode[%v] err[%v]\n", time.Now().UnixNano()/int64(time.Millisecond),ellapsed,ellapsedResize,ellapsedEncode,err)
 			debug := false
 			if debug {
 				payload = getHeaderByte(payload)

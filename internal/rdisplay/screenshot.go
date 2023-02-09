@@ -62,8 +62,8 @@ func (g *XScreenGrabber) Start() {
 	delta := time.Duration(1000/g.fps) * time.Millisecond
 	var lastImg *image.RGBA
 	files := FileWalk("./h264img")
-	_ = files
 	i:= 0
+	useMinicap := true
 	go func() {
 		for {
 			defer func() {
@@ -80,15 +80,24 @@ func (g *XScreenGrabber) Start() {
 				time.Sleep(time.Second * 1)
 				return
 			default:
-				files := FileWalk("./h264mini")
+				var file string
+				if useMinicap {
+					files = FileWalk("./h264mini")
+				}
 				if i == 200 {
 					i =0
 				}
 				if len(files) <= 0 {
 					return
 				}
-				img, err := getImage(files[len(files)-2])
-				fmt.Println(len(files),files[len(files)-2])
+				if useMinicap {
+					file = files[len(files)-2]
+				}else {
+					file = files[i]
+				}
+				img, err := getImage(file)
+				ts := ToString(time.Now().UnixNano()/int64(time.Millisecond))
+				fmt.Println(i,ts,file)
 				if err == nil {
 					lastImg = img
 				}
