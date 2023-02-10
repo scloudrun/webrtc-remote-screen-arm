@@ -55,7 +55,6 @@ func InitCrontab() {
 			return
 		default:
 			run()
-			fmt.Println("here run")
 			ellapsed := time.Now().Sub(startedAt)
 			sleepDuration := delta - ellapsed
 			if sleepDuration > 0 {
@@ -66,9 +65,8 @@ func InitCrontab() {
 }
 
 func remove() {
-	ticker := time.NewTicker(time.Duration(5) * time.Second)
+	ticker := time.NewTicker(time.Duration(2) * time.Second)
 	for {
-		fmt.Println("here remove")
 		files := FileWalk("./h264mini")
 		if len(files) >3 {
 			for k,v := range files {

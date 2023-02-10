@@ -24,6 +24,7 @@ func resizeImage(src *image.RGBA, target image.Point) *image.RGBA {
 type rtcStreamer struct {
 	track   *webrtc.TrackLocalStaticSample
 	stop    chan struct{}
+	stopStatus bool
 	screen  *rdisplay.ScreenGrabber
 	encoder *encoders.Encoder
 	size    image.Point
@@ -33,6 +34,7 @@ func newRTCStreamer(track *webrtc.TrackLocalStaticSample, screen *rdisplay.Scree
 	return &rtcStreamer{
 		track:   track,
 		stop:    make(chan struct{}),
+		stopStatus: true,
 		screen:  screen,
 		encoder: encoder,
 		size:    size,
@@ -81,7 +83,10 @@ func (s *rtcStreamer) stream(frame *image.RGBA) error {
 }
 
 func (s *rtcStreamer) close() {
-	close(s.stop)
+	if s.stopStatus{
+		close(s.stop)
+		s.stopStatus = false
+	}
 }
 
 // Write def

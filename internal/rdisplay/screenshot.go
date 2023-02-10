@@ -95,6 +95,7 @@ func (g *XScreenGrabber) Start() {
 				}else {
 					file = files[i]
 				}
+				//ToDo compare lastImage currentImge md5 equal or not equal,if euqal not send
 				img, err := getImage(file)
 				ts := ToString(time.Now().UnixNano()/int64(time.Millisecond))
 				fmt.Println(i,ts,file)
