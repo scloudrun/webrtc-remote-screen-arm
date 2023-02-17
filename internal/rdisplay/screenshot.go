@@ -75,9 +75,7 @@ func (g *XScreenGrabber) Start() {
 			startedAt := time.Now()
 			select {
 			case <-g.stop:
-				time.Sleep(time.Second * 1)
 				close(g.frames)
-				time.Sleep(time.Second * 1)
 				return
 			default:
 				var file string
@@ -101,11 +99,7 @@ func (g *XScreenGrabber) Start() {
 				fmt.Println(i,ts,file)
 				if err == nil {
 					lastImg = img
-				}
-				if err != nil {
-					if lastImg == nil {
-						fmt.Println("here empty")
-					}
+				}else {
 					img = lastImg
 				}
 				if img !=nil {

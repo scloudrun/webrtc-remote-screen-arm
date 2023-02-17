@@ -19,12 +19,14 @@ const (
 	httpDefaultPort   = "8020"
 	//defaultStunServer = "stun:stun.l.google.com:19302"
 	defaultStunServer = "stun:172.24.206.96:8021"
+	defaultFrameCount = 5
 )
 
 func main() {
 
 	httpPort := flag.String("http.port", httpDefaultPort, "HTTP listen port")
 	stunServer := flag.String("stun.server", defaultStunServer, "STUN server URL (stun:)")
+	frameCount := flag.Int("frame.count", defaultFrameCount, "frame count like 10 ,5")
 	flag.Parse()
 
 	var video rdisplay.Service
@@ -48,7 +50,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Endpoint to create a new speech to text session
-	mux.Handle("/api/", http.StripPrefix("/api", api.MakeHandler(webrtc, video)))
+	mux.Handle("/api/", http.StripPrefix("/api", api.MakeHandler(webrtc, video,*frameCount)))
 
 	// Serve static assets
 	mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./web"))))
@@ -59,7 +61,7 @@ func main() {
 		}
 		http.ServeFile(w, r, "./web/index.html")
 	})
-	go rdisplay.InitCrontab()
+	go rdisplay.InitCrontab(*frameCount)
 	errors := make(chan error, 2)
 	go func() {
 		log.Printf("Starting signaling server on port %s", *httpPort)

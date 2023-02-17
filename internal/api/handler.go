@@ -17,7 +17,7 @@ func handleError(w http.ResponseWriter, err error) {
 }
 
 // MakeHandler returns an HTTP handler for the session service
-func MakeHandler(webrtc rtc.Service, display rdisplay.Service) http.Handler {
+func MakeHandler(webrtc rtc.Service, display rdisplay.Service,frameCount int) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/session", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -32,7 +32,7 @@ func MakeHandler(webrtc rtc.Service, display rdisplay.Service) http.Handler {
 			return
 		}
 
-		peer, err := webrtc.CreateRemoteScreenConnection(req.Screen, 10)
+		peer, err := webrtc.CreateRemoteScreenConnection(req.Screen, frameCount)
 		if err != nil {
 			handleError(w, err)
 			return

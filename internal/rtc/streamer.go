@@ -28,6 +28,7 @@ type rtcStreamer struct {
 	screen  *rdisplay.ScreenGrabber
 	encoder *encoders.Encoder
 	size    image.Point
+	count int
 }
 
 func newRTCStreamer(track *webrtc.TrackLocalStaticSample, screen *rdisplay.ScreenGrabber, encoder *encoders.Encoder, size image.Point) videoStreamer {
@@ -38,7 +39,27 @@ func newRTCStreamer(track *webrtc.TrackLocalStaticSample, screen *rdisplay.Scree
 		screen:  screen,
 		encoder: encoder,
 		size:    size,
+		count: 	 0,
 	}
+}
+
+func (s *rtcStreamer) initEncoder() error {
+	var (
+		enc encoders.Service = &encoders.EncoderService{}
+	)
+
+	screen := rdisplay.Screen{Index: 0, Bounds: image.Rectangle{Min: image.Point{0, 0}, Max: image.Point{1920, 1080}}}
+	sourceSize := image.Point{
+		screen.Bounds.Dx(),
+		screen.Bounds.Dy(),
+	}
+
+	if v, err := enc.NewEncoder(1, sourceSize, 10); err !=nil {
+		return err
+	}else {
+		s.encoder = &v
+	}
+	return nil
 }
 
 func (s *rtcStreamer) start() {
@@ -69,6 +90,14 @@ var fileNumberMap = map[string]int{}
 
 func (s *rtcStreamer) stream(frame *image.RGBA) error {
 	resized := resizeImage(frame, s.size)
+	if s.count % 50 == 0 {
+		s.count = 0
+		(*s.encoder).Close()
+		s.initEncoder()
+		if *s.encoder == nil {
+			return nil
+		}
+	}
 	payload, err := (*s.encoder).Encode(resized)
 	if err != nil {
 		return err
@@ -76,6 +105,7 @@ func (s *rtcStreamer) stream(frame *image.RGBA) error {
 	if payload == nil {
 		return nil
 	}
+	s.count++
 	return s.track.WriteSample(media.Sample{
 		Data:    payload,
 		Duration: time.Second,

@@ -38,9 +38,9 @@ func RunCommand(command string) (string, error) {
 	return stdout.String(), err
 }
 
-func InitCrontab() {
+func InitCrontab(frameCount int) {
 	go remove()
-	delta := time.Duration(1000/10) * time.Millisecond
+	delta := time.Duration(1000/frameCount) * time.Millisecond
 	signals := make(chan bool)
 	for {
 		defer func() {
