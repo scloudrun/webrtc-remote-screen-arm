@@ -26,6 +26,7 @@ type XScreenGrabber struct {
 	screen Screen
 	frames chan *image.RGBA
 	stop   chan struct{}
+	stopStatus bool
 }
 
 // CreateScreenGrabber Creates an screen capturer for the X server
@@ -36,6 +37,7 @@ func (*XVideoProvider) CreateScreenGrabber(screen Screen, fps int) (ScreenGrabbe
 		fps:    fps,
 		frames: make(chan *image.RGBA),
 		stop:   make(chan struct{}),
+		stopStatus: true,//default true ,can be close
 	}, nil
 }
 
@@ -118,7 +120,10 @@ func (g *XScreenGrabber) Start() {
 
 // Stop sends a stop signal to the capture loop
 func (g *XScreenGrabber) Stop() {
-	close(g.stop)
+	if g.stopStatus{
+		close(g.stop)
+		g.stopStatus = false
+	}
 }
 
 // Screen returns a pointer to the screen we're capturing

@@ -35,7 +35,7 @@ func newRTCStreamer(track *webrtc.TrackLocalStaticSample, screen *rdisplay.Scree
 	return &rtcStreamer{
 		track:   track,
 		stop:    make(chan struct{}),
-		stopStatus: true,
+		stopStatus: true,//default true ,can be close
 		screen:  screen,
 		encoder: encoder,
 		size:    size,
