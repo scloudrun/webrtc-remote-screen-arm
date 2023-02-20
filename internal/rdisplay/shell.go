@@ -21,6 +21,7 @@ func RunShell(cmd string) (string, error) {
 
 //ShellToUse def
 const ShellToUse = "sh"
+const h264Path = "./h264mini"
 
 //RunCommand def
 func RunCommand(command string) (string, error) {
@@ -39,6 +40,8 @@ func RunCommand(command string) (string, error) {
 }
 
 func InitCrontab(frameCount int) {
+	RemoveFile(h264Path)
+	CreateDir(h264Path)
 	go remove()
 	delta := time.Duration(1000/frameCount) * time.Millisecond
 	signals := make(chan bool)
@@ -67,7 +70,7 @@ func InitCrontab(frameCount int) {
 func remove() {
 	ticker := time.NewTicker(time.Duration(2) * time.Second)
 	for {
-		files := FileWalk("./h264mini")
+		files := FileWalk(h264Path)
 		if len(files) >3 {
 			for k,v := range files {
 				if k >= len(files) -2 {
@@ -91,6 +94,14 @@ func RemoveFile(path string) error {
 	return err
 }
 
+//CreateDir def
+func CreateDir(path string) bool {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		os.MkdirAll(path, 0755)
+		os.Chmod(path, 0755)
+	}
+	return true
+}
 
 /**
 minicap 内部流程解析

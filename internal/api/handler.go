@@ -53,7 +53,12 @@ func MakeHandler(webrtc rtc.Service, display rdisplay.Service,frameCount int) ht
 			return
 		}
 
-		webrtcConnMap["127.0.0.1"] = peer
+		ip := "127.0.0.1"
+		if webrtcConnMap[ip] != nil {
+			v := webrtcConnMap[ip].(rtc.RemoteScreenConnection)
+			v.Close()
+		}
+		webrtcConnMap[ip] = peer
 		w.Write(payload)
 	})
 
