@@ -22,6 +22,7 @@ func RunShell(cmd string) (string, error) {
 //ShellToUse def
 const ShellToUse = "sh"
 const h264Path = "./h264mini"
+var RunStatus = false
 
 //RunCommand def
 func RunCommand(command string) (string, error) {
@@ -34,7 +35,7 @@ func RunCommand(command string) (string, error) {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("[err] : %v\n]",err)
 	}
 	return stdout.String(), err
 }
@@ -57,7 +58,9 @@ func InitCrontab(frameCount int) {
 		case <-signals:
 			return
 		default:
-			run()
+			if RunStatus {
+				run()
+			}
 			ellapsed := time.Now().Sub(startedAt)
 			sleepDuration := delta - ellapsed
 			if sleepDuration > 0 {
@@ -76,10 +79,9 @@ func remove() {
 				if k >= len(files) -2 {
 					continue
 				}
-				fmt.Println(v)
 				err := RemoveFile(v)
 				if err !=nil {
-					fmt.Println(err)
+					fmt.Printf("[err] : %v\n]",err)
 				}
 			}
 		}
@@ -116,8 +118,7 @@ func run() {
 	shellCmd := "LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/minicap -Q 70 -P \"1080x1920@540x960/0\" -s > /data/local/tmp/h264mini/"+ToString(time.Now().UnixNano()/int64(time.Millisecond))+".jpg"
 	_,err := RunCommand(shellCmd)
 	if err !=nil {
-		fmt.Println(time.Now().Unix())
-		fmt.Println(err)
+		fmt.Printf("[err] : %v\n]",err)
 	}
 }
 

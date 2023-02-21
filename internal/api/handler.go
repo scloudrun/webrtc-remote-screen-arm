@@ -58,6 +58,7 @@ func MakeHandler(webrtc rtc.Service, display rdisplay.Service,frameCount int) ht
 			v := webrtcConnMap[ip].(rtc.RemoteScreenConnection)
 			v.Close()
 		}
+		rdisplay.RunStatus = true
 		webrtcConnMap[ip] = peer
 		w.Write(payload)
 	})
@@ -73,6 +74,7 @@ func MakeHandler(webrtc rtc.Service, display rdisplay.Service,frameCount int) ht
 		}
 		v := webrtcConnMap[ip].(rtc.RemoteScreenConnection)
 		v.Close()
+		rdisplay.RunStatus = false
 		webrtcConnMap[ip] = nil
 	})
 

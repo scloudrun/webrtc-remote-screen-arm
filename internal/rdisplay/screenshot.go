@@ -87,25 +87,24 @@ func (g *XScreenGrabber) Start() {
 				if i == 200 {
 					i =0
 				}
-				if len(files) <= 0 {
-					return
-				}
-				if useMinicap {
-					file = files[len(files)-2]
-				}else {
-					file = files[i]
-				}
-				//ToDo compare lastImage currentImge md5 equal or not equal,if euqal not send
-				img, err := getImage(file)
-				ts := ToString(time.Now().UnixNano()/int64(time.Millisecond))
-				fmt.Println(i,ts,file)
-				if err == nil {
-					lastImg = img
-				}else {
-					img = lastImg
-				}
-				if img !=nil {
-					g.frames <- img
+				if len(files) >= 2 {
+					if useMinicap {
+						file = files[len(files)-2]
+					}else {
+						file = files[i]
+					}
+					//ToDo compare lastImage currentImge md5 equal or not equal,if euqal not send
+					img, err := getImage(file)
+					ts := ToString(time.Now().UnixNano()/int64(time.Millisecond))
+					fmt.Println(i,ts,file)
+					if err == nil {
+						lastImg = img
+					}else {
+						img = lastImg
+					}
+					if img !=nil {
+						g.frames <- img
+					}
 				}
 				i++
 				ellapsed := time.Now().Sub(startedAt)
