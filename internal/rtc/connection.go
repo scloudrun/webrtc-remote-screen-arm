@@ -1,12 +1,12 @@
 package rtc
 
 import (
+	"encoding/json"
 	"fmt"
+	"image"
+	"log"
 	"strconv"
 	"strings"
-	"log"
-	"image"
-	"encoding/json"
 
 	"github.com/scloudrun/webrtc-remote-screen-arm/internal/encoders"
 	"github.com/scloudrun/webrtc-remote-screen-arm/internal/rdisplay"
@@ -43,13 +43,13 @@ func findBestCodec(sdp *sdp.SessionDescription, encService encoders.Service, h26
 				supportsProfile := strings.Contains(sdpCodec.Fmtp, fmt.Sprintf("profile-level-id=%s", h264Profile))
 				if packetSupport && supportsProfile {
 					h264Codec = &webrtc.RTPCodecParameters{
-						PayloadType: webrtc.PayloadType(payloadType),
+						PayloadType:        webrtc.PayloadType(payloadType),
 						RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeH264, ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: nil}}
 					h264Codec.SDPFmtpLine = sdpCodec.Fmtp
 				}
 			} else if sdpCodec.Name == "VP8" && vp8Codec == nil {
 				vp8Codec = &webrtc.RTPCodecParameters{
-					PayloadType: webrtc.PayloadType(payloadType),
+					PayloadType:        webrtc.PayloadType(payloadType),
 					RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeVP8, ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: nil}}
 				vp8Codec.SDPFmtpLine = sdpCodec.Fmtp
 			}
@@ -91,7 +91,7 @@ func getTrackDirection(sdp *sdp.SessionDescription) webrtc.RTPTransceiverDirecti
 // ProcessOffer handles the SDP offer coming from the client,
 // return the SDP answer that must be passed back to stablish the WebRTC
 // connection.
-func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) { 
+func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 	sdp := sdp.SessionDescription{}
 	err := sdp.Unmarshal(strOffer)
 	if err != nil {
@@ -174,7 +174,6 @@ func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 	// in a production application you should exchange ICE Candidates via OnICECandidate
 	<-gatherComplete
 
-
 	screen := p.grabber.Screen()
 	sourceSize := image.Point{
 		screen.Bounds.Dx(),
@@ -198,11 +197,11 @@ func (p *RemoteScreenPeerConn) ProcessOffer(strOffer string) (string, error) {
 		panic(err)
 	}
 	var answerMap map[string]string
-	err = json.Unmarshal(response,&answerMap)
+	err = json.Unmarshal(response, &answerMap)
 	if err != nil {
-		return "",err
+		return "", err
 	}
-	return answerMap["sdp"],err
+	return answerMap["sdp"], err
 }
 
 func (p *RemoteScreenPeerConn) start() {

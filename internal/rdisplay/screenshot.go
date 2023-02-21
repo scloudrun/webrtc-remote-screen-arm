@@ -7,9 +7,9 @@ import (
 	"image/color"
 	"image/draw"
 	_ "image/jpeg"
-	"path/filepath"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,23 +21,23 @@ type XVideoProvider struct{}
 
 // XScreenGrabber captures video from a X server
 type XScreenGrabber struct {
-	id     string
-	fps    int
-	screen Screen
-	frames chan *image.RGBA
-	stop   chan struct{}
+	id         string
+	fps        int
+	screen     Screen
+	frames     chan *image.RGBA
+	stop       chan struct{}
 	stopStatus bool
 }
 
 // CreateScreenGrabber Creates an screen capturer for the X server
 func (*XVideoProvider) CreateScreenGrabber(screen Screen, fps int) (ScreenGrabber, error) {
 	return &XScreenGrabber{
-		id:     uuid.New().String(),
-		screen: screen,
-		fps:    fps,
-		frames: make(chan *image.RGBA),
-		stop:   make(chan struct{}),
-		stopStatus: true,//default true ,can be close
+		id:         uuid.New().String(),
+		screen:     screen,
+		fps:        fps,
+		frames:     make(chan *image.RGBA),
+		stop:       make(chan struct{}),
+		stopStatus: true, //default true ,can be close
 	}, nil
 }
 
@@ -64,7 +64,7 @@ func (g *XScreenGrabber) Start() {
 	delta := time.Duration(1000/g.fps) * time.Millisecond
 	var lastImg *image.RGBA
 	files := FileWalk("./h264img")
-	i:= 0
+	i := 0
 	useMinicap := true
 	go func() {
 		for {
@@ -85,24 +85,24 @@ func (g *XScreenGrabber) Start() {
 					files = FileWalk("./h264mini")
 				}
 				if i == 200 {
-					i =0
+					i = 0
 				}
 				if len(files) >= 2 {
 					if useMinicap {
 						file = files[len(files)-2]
-					}else {
+					} else {
 						file = files[i]
 					}
 					//ToDo compare lastImage currentImge md5 equal or not equal,if euqal not send
 					img, err := getImage(file)
-					ts := ToString(time.Now().UnixNano()/int64(time.Millisecond))
-					fmt.Println(i,ts,file)
+					ts := ToString(time.Now().UnixNano() / int64(time.Millisecond))
+					fmt.Println(i, ts, file)
 					if err == nil {
 						lastImg = img
-					}else {
+					} else {
 						img = lastImg
 					}
-					if img !=nil {
+					if img != nil {
 						g.frames <- img
 					}
 				}
@@ -119,7 +119,7 @@ func (g *XScreenGrabber) Start() {
 
 // Stop sends a stop signal to the capture loop
 func (g *XScreenGrabber) Stop() {
-	if g.stopStatus{
+	if g.stopStatus {
 		close(g.stop)
 		g.stopStatus = false
 	}

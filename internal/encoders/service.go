@@ -18,7 +18,7 @@ type Encoder interface {
 	VideoSize() (image.Point, error)
 }
 
-//VideoCodec can be either h264 or vp8
+// VideoCodec can be either h264 or vp8
 type VideoCodec = int
 
 const (

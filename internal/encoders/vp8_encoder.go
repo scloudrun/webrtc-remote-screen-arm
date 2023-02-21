@@ -1,3 +1,4 @@
+//go:build vp8enc
 // +build vp8enc
 
 package encoders
@@ -117,7 +118,7 @@ import "C"
 
 const keyFrameInterval = 10
 
-//VP8Encoder VP8 encoder
+// VP8Encoder VP8 encoder
 type VP8Encoder struct {
 	buffer     *bytes.Buffer
 	realSize   image.Point
@@ -161,7 +162,7 @@ func newVP8Encoder(size image.Point, frameRate int) (Encoder, error) {
 	}, nil
 }
 
-//Encode encodes a frame into a h264 payload
+// Encode encodes a frame into a h264 payload
 func (e *VP8Encoder) Encode(frame *image.RGBA) ([]byte, error) {
 
 	encodedData := unsafe.Pointer(nil)
@@ -189,12 +190,12 @@ func (e *VP8Encoder) Encode(frame *image.RGBA) ([]byte, error) {
 	return nil, nil
 }
 
-//Encode encodes a frame into a h264 payload
+// Encode encodes a frame into a h264 payload
 func (e *VP8Encoder) VideoSize() (image.Point, error) {
 	return e.realSize, nil
 }
 
-//Close flushes and closes the inner x264 encoder
+// Close flushes and closes the inner x264 encoder
 func (e *VP8Encoder) Close() error {
 	C.vpx_img_free(&e.vpxImage)
 	C.vpx_codec_destroy(&e.codecCtx)

@@ -1,3 +1,4 @@
+//go:build h264enc
 // +build h264enc
 
 package encoders
@@ -11,7 +12,7 @@ import (
 	"github.com/gen2brain/x264-go"
 )
 
-//H264Encoder h264 encoder
+// H264Encoder h264 encoder
 type H264Encoder struct {
 	buffer   *bytes.Buffer
 	encoder  *x264.Encoder
@@ -46,7 +47,7 @@ func newH264Encoder(size image.Point, frameRate int) (Encoder, error) {
 	}, nil
 }
 
-//Encode encodes a frame into a h264 payload
+// Encode encodes a frame into a h264 payload
 func (e *H264Encoder) Encode(frame *image.RGBA) ([]byte, error) {
 	err := e.encoder.Encode(frame)
 	if err != nil {
@@ -61,17 +62,17 @@ func (e *H264Encoder) Encode(frame *image.RGBA) ([]byte, error) {
 	return payload, nil
 }
 
-//VideoSize returns the size the other side is expecting
+// VideoSize returns the size the other side is expecting
 func (e *H264Encoder) VideoSize() (image.Point, error) {
 	return e.realSize, nil
 }
 
-//Close flushes and closes the inner x264 encoder
+// Close flushes and closes the inner x264 encoder
 func (e *H264Encoder) Close() error {
 	return e.encoder.Close()
 }
 
-//findBestSizeForH264Profile finds the best match given the size constraint and H264 profile
+// findBestSizeForH264Profile finds the best match given the size constraint and H264 profile
 func findBestSizeForH264Profile(profile string, constraints image.Point) (image.Point, error) {
 	profileSizes := map[string][]image.Point{
 		"3.1": []image.Point{

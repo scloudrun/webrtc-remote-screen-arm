@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	httpDefaultPort   = "8020"
+	httpDefaultPort = "8020"
 	//defaultStunServer = "stun:stun.l.google.com:19302"
 	defaultStunServer = "stun:172.24.206.96:8021"
 	defaultFrameCount = 5
@@ -50,7 +50,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Endpoint to create a new speech to text session
-	mux.Handle("/api/", http.StripPrefix("/api", api.MakeHandler(webrtc, video,*frameCount)))
+	mux.Handle("/api/", http.StripPrefix("/api", api.MakeHandler(webrtc, video, *frameCount)))
 
 	// Serve static assets
 	mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./web"))))

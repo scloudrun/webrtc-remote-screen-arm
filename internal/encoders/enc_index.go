@@ -12,16 +12,16 @@ type encoderFactory = func(size image.Point, frameRate int) (Encoder, error)
 // of each encoder.
 var registeredEncoders = make(map[VideoCodec]encoderFactory, 2)
 
-//EncoderService creates instances of encoders
+// EncoderService creates instances of encoders
 type EncoderService struct {
 }
 
-//NewEncoderService creates an encoder factory
+// NewEncoderService creates an encoder factory
 func NewEncoderService() Service {
 	return &EncoderService{}
 }
 
-//NewEncoder creates an instance of an encoder of the selected codec
+// NewEncoder creates an instance of an encoder of the selected codec
 func (*EncoderService) NewEncoder(codec VideoCodec, size image.Point, frameRate int) (Encoder, error) {
 	factory, found := registeredEncoders[codec]
 	if !found {
@@ -30,7 +30,7 @@ func (*EncoderService) NewEncoder(codec VideoCodec, size image.Point, frameRate 
 	return factory(size, frameRate)
 }
 
-//Supports returns a boolean indicating if the codec is supported
+// Supports returns a boolean indicating if the codec is supported
 func (*EncoderService) Supports(codec VideoCodec) bool {
 	_, found := registeredEncoders[codec]
 	return found

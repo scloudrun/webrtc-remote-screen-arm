@@ -22,24 +22,24 @@ func resizeImage(src *image.RGBA, target image.Point) *image.RGBA {
 }
 
 type rtcStreamer struct {
-	track   *webrtc.TrackLocalStaticSample
-	stop    chan struct{}
+	track      *webrtc.TrackLocalStaticSample
+	stop       chan struct{}
 	stopStatus bool
-	screen  *rdisplay.ScreenGrabber
-	encoder *encoders.Encoder
-	size    image.Point
-	count int
+	screen     *rdisplay.ScreenGrabber
+	encoder    *encoders.Encoder
+	size       image.Point
+	count      int
 }
 
 func newRTCStreamer(track *webrtc.TrackLocalStaticSample, screen *rdisplay.ScreenGrabber, encoder *encoders.Encoder, size image.Point) videoStreamer {
 	return &rtcStreamer{
-		track:   track,
-		stop:    make(chan struct{}),
-		stopStatus: true,//default true ,can be close
-		screen:  screen,
-		encoder: encoder,
-		size:    size,
-		count: 	 0,
+		track:      track,
+		stop:       make(chan struct{}),
+		stopStatus: true, //default true ,can be close
+		screen:     screen,
+		encoder:    encoder,
+		size:       size,
+		count:      0,
 	}
 }
 
@@ -54,9 +54,9 @@ func (s *rtcStreamer) initEncoder() error {
 		screen.Bounds.Dy(),
 	}
 
-	if v, err := enc.NewEncoder(1, sourceSize, 10); err !=nil {
+	if v, err := enc.NewEncoder(1, sourceSize, 10); err != nil {
 		return err
-	}else {
+	} else {
 		s.encoder = &v
 	}
 	return nil
@@ -90,7 +90,7 @@ var fileNumberMap = map[string]int{}
 
 func (s *rtcStreamer) stream(frame *image.RGBA) error {
 	resized := resizeImage(frame, s.size)
-	if s.count % 50 == 0 {
+	if s.count%50 == 0 {
 		s.count = 0
 		(*s.encoder).Close()
 		s.initEncoder()
@@ -107,13 +107,13 @@ func (s *rtcStreamer) stream(frame *image.RGBA) error {
 	}
 	s.count++
 	return s.track.WriteSample(media.Sample{
-		Data:    payload,
+		Data:     payload,
 		Duration: time.Second,
 	})
 }
 
 func (s *rtcStreamer) close() {
-	if s.stopStatus{
+	if s.stopStatus {
 		close(s.stop)
 		s.stopStatus = false
 	}
