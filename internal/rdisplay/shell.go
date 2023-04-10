@@ -23,7 +23,10 @@ func RunShell(cmd string) (string, error) {
 const ShellToUse = "sh"
 const h264Path = "./h264mini"
 
-var RunStatus = false
+var (
+	RunStatus  = false
+	OpenStatus = false
+)
 
 // RunCommand def
 func RunCommand(command string) (string, error) {
@@ -42,6 +45,7 @@ func RunCommand(command string) (string, error) {
 }
 
 func InitCrontab(frameCount int) {
+	fmt.Printf("Init runStatus[%v] openStatus[%v]\n\n", RunStatus, OpenStatus)
 	RemoveFile(h264Path)
 	CreateDir(h264Path)
 	go remove()
@@ -59,7 +63,7 @@ func InitCrontab(frameCount int) {
 		case <-signals:
 			return
 		default:
-			if RunStatus {
+			if RunStatus && OpenStatus {
 				run()
 			}
 			ellapsed := time.Now().Sub(startedAt)

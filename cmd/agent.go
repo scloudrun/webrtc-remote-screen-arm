@@ -20,6 +20,7 @@ const (
 	//defaultStunServer = "stun:stun.l.google.com:19302"
 	defaultStunServer = "stun:172.24.206.96:8021"
 	defaultFrameCount = 5
+	openStatus        = 0
 )
 
 func main() {
@@ -27,6 +28,7 @@ func main() {
 	httpPort := flag.String("http.port", httpDefaultPort, "HTTP listen port")
 	stunServer := flag.String("stun.server", defaultStunServer, "STUN server URL (stun:)")
 	frameCount := flag.Int("frame.count", defaultFrameCount, "frame count like 10 ,5")
+	openMinicapStatus := flag.Int("minicap.status", openStatus, "1 open ,o not open")
 	flag.Parse()
 
 	var video rdisplay.Service
@@ -42,6 +44,10 @@ func main() {
 	var enc encoders.Service = &encoders.EncoderService{}
 	if err != nil {
 		log.Fatalf("Can't create encoder service: %v", err)
+	}
+
+	if *openMinicapStatus == 1 {
+		rdisplay.OpenStatus = true
 	}
 
 	var webrtc rtc.Service
