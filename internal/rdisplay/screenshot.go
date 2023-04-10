@@ -63,7 +63,7 @@ func (g *XScreenGrabber) Frames() <-chan *image.RGBA {
 func (g *XScreenGrabber) Start() {
 	delta := time.Duration(1000/g.fps) * time.Millisecond
 	var lastImg *image.RGBA
-	files := FileWalk("./h264img")
+	files := FileWalk("/data/local/tmp/h264img")
 	i := 0
 	useMinicap := true
 	go func() {
@@ -82,7 +82,7 @@ func (g *XScreenGrabber) Start() {
 			default:
 				var file string
 				if useMinicap {
-					files = FileWalk("./h264mini")
+					files = FileWalk("/data/local/tmp/h264mini")
 				}
 				if i == 200 {
 					i = 0

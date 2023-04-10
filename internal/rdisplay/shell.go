@@ -21,7 +21,7 @@ func RunShell(cmd string) (string, error) {
 
 // ShellToUse def
 const ShellToUse = "sh"
-const h264Path = "./h264mini"
+const h264Path = "/data/local/tmp/h264mini"
 
 var (
 	RunStatus  = false
