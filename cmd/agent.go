@@ -54,6 +54,9 @@ func main() {
 	webrtc = rtc.NewRemoteScreenService(*stunServer, video, enc)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("success"))
+	})
 
 	// Endpoint to create a new speech to text session
 	mux.Handle("/api/", http.StripPrefix("/api", api.MakeHandler(webrtc, video, *frameCount)))
